@@ -14,7 +14,6 @@ class GUI(tk.Frame):
 		self.src_dir = None
 		self.dest_dir = None
 
-		#self.pack()
 		self.build_app()
 		self.create_feature1_widgets()
 

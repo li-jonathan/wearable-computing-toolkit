@@ -5,6 +5,10 @@ import argparse
 
 from mbient_data_file import MBientDataFile
 
+"""
+CombineFiles
+From: https://git.cs.jmu.edu/WearableComputing/ActivityRecognition/blob/data_tools/Python/tools/combine_files.py
+"""
 
 class CombineFiles():
 

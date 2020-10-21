@@ -3,6 +3,11 @@ import os
 import sys
 import argparse
 
+"""
+MBientDataFile class
+From: https://git.cs.jmu.edu/WearableComputing/ActivityRecognition/blob/data_tools/Python/tools/combine_files.py
+"""
+
 #### Begin MBientDataFile Class ####
 
 class MBientDataFile:
