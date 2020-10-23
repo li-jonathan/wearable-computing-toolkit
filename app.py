@@ -4,7 +4,9 @@ from tkinter import filedialog
 from combine_files import CombineFiles
 import os
 
-class GUI(tk.Frame):
+# usage: python app.py
+
+class App(tk.Frame):
 
 	def __init__(self, master=None):
 		"""Constructor."""
@@ -12,74 +14,72 @@ class GUI(tk.Frame):
 		super().__init__(master)
 		self.master = master
 
-		self.func1_frame = Frame(master, bg="white")
-		self.func2_frame = Frame(master, bg="white")
+		self.cf_frame = Frame(master, bg="white") # combine files frame
+		self.ld_frame = Frame(master, bg="white") # label datasets frame
 
-		self.src_dir = None
-		self.dest_dir = None
+		self.init_app()
+		self.create_combine_files_widgets()
+		self.create_label_datasets_widgets()
 
-		self.merged_file = None
-
-		self.build_app()
-		self.create_feature1_widgets()
-		self.create_feature2_widgets()
-
-	def build_app(self):
-		"""Set window settings."""
+	def init_app(self):
+		"""Initialize app settings and variables."""
 
 		self.master.title("Wearable Computing Toolkit")
 		self.master.config(background = "white") 
 		p1 = PhotoImage(file = 'icon.png') 
 		self.master.iconphoto(False, p1)
-		self.master.minsize(500, 600)
+		self.master.minsize(850, 300)
+
+		self.src_dir = None
+		self.dest_dir = None
+		self.merged_file = None
 
 
-	def create_feature1_widgets(self):
+	def create_combine_files_widgets(self):
 		"""Widgets for combine files from source into destination."""
 
-		self.func1_frame.pack(pady=10)
+		self.cf_frame.pack(side="left", padx=10, pady=10)
 
-		### SOURCE DIRECTORY ###
+		### FIND SOURCE DIRECTORY ###
 
-		label = tk.Label(self.func1_frame, bg="white", text="Merge and align data streams", font=("Arial 18 bold"))
-		label.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+		label = tk.Label(self.cf_frame, bg="white", text="Merge and align data streams", font=("Arial 18 bold"))
+		label.grid(row=0, column=0, columnspan=3, pady=5)
 
 		# choose src dir label
-		src_dir_prompt = tk.Label(self.func1_frame, text="Choose source directory", bg="white")
+		src_dir_prompt = tk.Label(self.cf_frame, text="Choose source directory", bg="white")
 		src_dir_prompt.grid(row=1, column=0, padx=5, pady=5, sticky=W)
 
 		# browse src dir button
-		src_bf_btn = tk.Button(self.func1_frame, text="Browse...")
+		src_bf_btn = tk.Button(self.cf_frame, text="Browse...")
 		src_bf_btn["command"] = self.browse_src_dir
 		src_bf_btn.grid(row=1, column=1, padx=5, pady=5)
 
 		# display selected src dir
-		self.src_dir_lbl = tk.Label(self.func1_frame, bg="white")
+		self.src_dir_lbl = tk.Label(self.cf_frame, bg="white")
 		self.src_dir_lbl.grid(row=1, column=2, padx=5, pady=5)
 
-		### DESTINATION DIRECTORY ###
+		### FIND DESTINATION DIRECTORY ###
 
 		# choose dest dir label
-		dest_dir_prompt = tk.Label(self.func1_frame, text="Choose destination directory", bg="white")
+		dest_dir_prompt = tk.Label(self.cf_frame, text="Choose destination directory", bg="white")
 		dest_dir_prompt.grid(row=2, column=0, padx=5, pady=5, sticky=W)
 
 		# browse dest dir button
-		dest_bf_btn = tk.Button(self.func1_frame, text="Browse...")
+		dest_bf_btn = tk.Button(self.cf_frame, text="Browse...")
 		dest_bf_btn["command"] = self.browse_dest_dir
 		dest_bf_btn.grid(row=2, column=1, padx=5, pady=5)
 
 		# display selected dest dir
-		self.dest_dir_lbl = tk.Label(self.func1_frame, bg="white")
+		self.dest_dir_lbl = tk.Label(self.cf_frame, bg="white")
 		self.dest_dir_lbl.grid(row=2, column=2, padx=5, pady=5)
 
 		### COMBINE FILES ###
 
-		# combine files button
-		combine_files_btn = tk.Button(self.func1_frame, text="Combine files")
+		combine_files_btn = tk.Button(self.cf_frame, text="Combine files")
 		combine_files_btn["command"] = self.combine_files
 		combine_files_btn.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
 
-		self.combine_files_log = tk.Text(self.func1_frame, bg="white", width=50, height=5)
+		self.combine_files_log = tk.Text(self.cf_frame, bg="white", width=50, height=5)
 		self.combine_files_log.grid(row=4, column=0, columnspan=3, padx=5, pady=5)
 
 	def browse_src_dir(self):
@@ -102,30 +102,36 @@ class GUI(tk.Frame):
 		cf = CombineFiles(self.src_dir, self.dest_dir)
 		cf.run()
 
+		# show logs for combining files
 		for l in cf.log:
 			self.combine_files_log.insert(tk.END, l + "\n");
 		self.combine_files_log.config(state=DISABLED)
 
 
-	def create_feature2_widgets(self):
-		self.func2_frame.pack(pady=10)
+	def create_label_datasets_widgets(self):
+		"""Widgets to label datasets with activities"""
 
-		label = tk.Label(self.func2_frame, bg="white", text="Label datasets with activity names", font=("Arial 18 bold"))
-		label.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+		self.ld_frame.pack(side="right", padx=10, pady=10)
+
+		label = tk.Label(self.ld_frame, bg="white", text="Label datasets with activity names", font=("Arial 18 bold"))
+		label.grid(row=0, column=0, columnspan=3, pady=5)
 
 		# browse merged file button
-		merged_file_bf_btn = tk.Button(self.func2_frame, text="Browse for merged file")
+		merged_file_bf_btn = tk.Button(self.ld_frame, text="Browse for merged file")
 		merged_file_bf_btn["command"] = self.browse_merged_file
 		merged_file_bf_btn.grid(row=1, column=1, padx=5, pady=5)
+
+		self.merged_file_lbl = tk.Label(self.ld_frame, bg="white")
+		self.merged_file_lbl.grid(row=2, column=1, padx=5, pady=5)
 
 	def browse_merged_file(self):
 		"""Browse for source directory."""
 
 		selected_file = filedialog.askopenfilename(parent=root, initialdir=os.getcwd(), title='Please select the merged file')
-		self.merged_file = selected_file
+		self.merged_file = selected_file[selected_file.rfind('/')+1:]
 		self.merged_file_lbl["text"] = self.merged_file
 
 if __name__ == '__main__':
 	root = tk.Tk()
-	app = GUI(master=root)
+	app = App(master=root)
 	app.mainloop()
