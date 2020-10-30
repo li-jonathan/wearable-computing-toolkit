@@ -2,6 +2,7 @@ from tkinter import *
 import tkinter as tk
 from tkinter import filedialog 
 from combine_files import CombineFiles
+from label_datasets import LabelDatasets
 import os
 
 # usage: python app.py
@@ -26,13 +27,14 @@ class App(tk.Frame):
 
 		self.master.title("Wearable Computing Toolkit")
 		self.master.config(background = "white") 
-		p1 = PhotoImage(file = 'icon.png') 
-		self.master.iconphoto(False, p1)
-		self.master.minsize(850, 300)
+		# p1 = PhotoImage(file = 'icon.png') 
+		# self.master.iconphoto(False, p1)
+		self.master.minsize(900, 300)
 
 		self.src_dir = None
 		self.dest_dir = None
 		self.merged_file = None
+		self.activities = None
 
 
 	def create_combine_files_widgets(self):
@@ -119,17 +121,37 @@ class App(tk.Frame):
 		# browse merged file button
 		merged_file_bf_btn = tk.Button(self.ld_frame, text="Browse for merged file")
 		merged_file_bf_btn["command"] = self.browse_merged_file
-		merged_file_bf_btn.grid(row=1, column=1, padx=5, pady=5)
+		merged_file_bf_btn.grid(row=1, column=0, columnspan=3, padx=5, pady=5)
 
+		# selected merged csv file label
 		self.merged_file_lbl = tk.Label(self.ld_frame, bg="white")
-		self.merged_file_lbl.grid(row=2, column=1, padx=5, pady=5)
+		self.merged_file_lbl.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
+
+		# list activities label
+		num_activities_lbl = tk.Label(self.ld_frame, text="List activities (comma separated)", bg="white")
+		num_activities_lbl.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
+
+		# list of activities
+		self.activities_list = tk.Text(self.ld_frame, bg="white", width=50, height=4)
+		self.activities_list.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
+
+		# label datasets button
+		lbl_datasets_btn = tk.Button(self.ld_frame, text="Label datasets")
+		lbl_datasets_btn["command"] = self.label_datasets
+		lbl_datasets_btn.grid(row=5, column=0, columnspan=3, padx=5, pady=5)
 
 	def browse_merged_file(self):
 		"""Browse for source directory."""
 
 		selected_file = filedialog.askopenfilename(parent=root, initialdir=os.getcwd(), title='Please select the merged file')
-		self.merged_file = selected_file[selected_file.rfind('/')+1:]
+		self.merged_file = selected_file[selected_file.rfind("/", 0, selected_file.rfind("/"))+1:]
 		self.merged_file_lbl["text"] = self.merged_file
+		#self.merged_file_lbl["text"] = selected_file
+
+	def label_datasets(self):
+		self.activities = self.activities_list.get("1.0",END)
+		ld = LabelDatasets(self.merged_file, self.activities)
+		ld.run()
 
 if __name__ == '__main__':
 	root = tk.Tk()

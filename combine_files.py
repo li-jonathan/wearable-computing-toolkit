@@ -1,9 +1,9 @@
 import pandas as pd
 import os
 import sys
-import argparse
 
 from mbient_data_file import MBientDataFile
+#from toolkit.mbient_data_file import MBientDataFile
 
 """
 CombineFiles
@@ -12,112 +12,113 @@ From: https://git.cs.jmu.edu/WearableComputing/ActivityRecognition/blob/data_too
 
 class CombineFiles():
 
-	def __init__(self, source, destination):
-		"""Constructor."""
+    def __init__(self, source, destination):
+        """Constructor."""
 
-		self.src_folder = source
-		self.dest_folder = destination
-		self.log = []
-		
-	def make_paths_absolute(self):
-		"""Math paths absolute."""
+        self.src_folder = source
+        self.dest_folder = destination
+        self.log = []
 
-		self.log.append("Making paths absolute...")
-		if os.path.isabs(self.src_folder) != True:
-			self.src_folder = os.path.abspath(self.src_folder)
-		if os.path.isabs(self.dest_folder) != True:
-			self.dest_folder = os.path.abspath(self.dest_folder)
+    def make_paths_absolute(self):
+        """Math paths absolute."""
 
-	def validate_folders(self):
-		"""Determine if source and destination folders are valid folders."""
+        self.log.append("Making paths absolute...")
+        if os.path.isabs(self.src_folder) != True:
+            self.src_folder = os.path.abspath(self.src_folder)
+        if os.path.isabs(self.dest_folder) != True:
+            self.dest_folder = os.path.abspath(self.dest_folder)
 
-		self.log.append("Validating folders...")
-		if os.path.isdir(self.src_folder)==False:
-			self.log.append('Source folder '+self.src_folder+' cannot be found!\nExiting...')
-			sys.exit(0)
-		if os.path.isdir(self.dest_folder)==False:
-			self.log.append('Destination folder' +self.dest_folder+' cannot be found!\nExiting...')
-			sys.exit(0)
+    def validate_folders(self):
+        """Determine if source and destination folders are valid folders."""
 
-	def main(self):
-		"""Main."""
+        self.log.append("Validating folders...")
+        if os.path.isdir(self.src_folder)==False:
+            self.log.append('Source folder '+self.src_folder+' cannot be found!\nExiting...')
+            sys.exit(0)
+        if os.path.isdir(self.dest_folder)==False:
+            self.log.append('Destination folder' +self.dest_folder+' cannot be found!\nExiting...')
+            sys.exit(0)
 
-		source = self.src_folder
-		dest = self.dest_folder
+    def main(self):
+        """Main."""
 
-		#get all the files out of the src/ folder
-		input_file_path = source + '/' #this line may no longer be necessary
-		files = os.listdir(input_file_path)
+        source = self.src_folder
+        dest = self.dest_folder
 
-		mbient_files = list()
+        #get all the files out of the src/ folder
+        input_file_path = source + '/' #this line may no longer be necessary
+        files = os.listdir(input_file_path)
 
-		for file in files:
-			if "Accelerometer" or "Gyroscope" in file:
-					dataFile= MBientDataFile(input_file_path+file)
-					mbient_files.append(dataFile)
+        mbient_files = list()
 
-	    #basic sanity checking. See if all have same sample right and
-	    #if they start are "roughly" the same time
+        for file in files:
+            if "Accelerometer" or "Gyroscope" in file:
+                    dataFile= MBientDataFile(input_file_path+file)
+                    mbient_files.append(dataFile)
 
-	    #Check #0 Did we get any files?!
-		if len(mbient_files) == 0:
-			self.log.append('No files in source directory. Exiting.')
-			return
+        #basic sanity checking. See if all have same sample right and
+        #if they start are "roughly" the same time
 
-	    #Check #1: See if files are all the same sample right
-		initRate = mbient_files[0].sampleRate
-		for i in range(1,len(mbient_files)):
-			#TODO: come up with a better method than this. 2Hz sampling error may a lot...
-			if abs(initRate - mbient_files[i].sampleRate)>2:
-				self.log.append("Error! All files are not the same sample rate!")
-				return
+        #Check #0 Did we get any files?!
+        if len(mbient_files) == 0:
+            self.log.append('No files in source directory. Exiting.')
+            return
+
+        #Check #1: See if files are all the same sample right
+        initRate = mbient_files[0].sampleRate
+        for i in range(1,len(mbient_files)):
+            #TODO: come up with a better method than this. 2Hz sampling error may a lot...
+            if abs(initRate - mbient_files[i].sampleRate)>2:
+                self.log.append("Error! All files are not the same sample rate!")
+                return
 
 
-	    #Check #2: See if they all start at the "same" time
-		startTimes = list()
-		for file in mbient_files:
-			startTimes.append(file.startTime)
+        #Check #2: See if they all start at the "same" time
+        startTimes = list()
+        for file in mbient_files:
+            startTimes.append(file.startTime)
 
-		minimum = min(startTimes)
-		maximum = max(startTimes)
+        minimum = min(startTimes)
+        maximum = max(startTimes)
 
-		delta = abs(minimum - maximum)
+        delta = abs(minimum - maximum)
 
-		synchronize=False
-		if delta>1000:
-			self.log.append("Files have different start times. Synchronizing....")
-			synchronize=True
+        synchronize=False
+        if delta>1000:
+            self.log.append("Files have different start times. Synchronizing....")
+            synchronize=True
 
-	    #generate dataframes from each file. Concat into single file and
-	    #if needed to synchronize follow https://mbientlab.com/tutorials/Apps.html#synchronizing-multiple-datasets-in-python
-	    #perform left merge based upon the "oldest" file
+        #generate dataframes from each file. Concat into single file and
+        #if needed to synchronize follow https://mbientlab.com/tutorials/Apps.html#synchronizing-multiple-datasets-in-python
+        #perform left merge based upon the "oldest" file
 
-	    #find the youngest file and make it "left"
-		def sortMethod(mbientFile):
-			return mbientFile.startTime
+        # find the youngest file and make it "left"
+		# (this will be the file with the oldest starting timestamp)
+        def sortMethod(mbientFile):
+            return mbientFile.startTime
 
-		mbient_files=sorted(mbient_files,key=sortMethod,reverse=True)
+        mbient_files=sorted(mbient_files,key=sortMethod,reverse=True)
 
-		left = mbient_files[0].generate_data_frame()
+        left = mbient_files[0].generate_data_frame()
 
-		for i in range(1,len(mbient_files)):
-			right = mbient_files[i].generate_data_frame()
+        for i in range(1,len(mbient_files)):
+            right = mbient_files[i].generate_data_frame()
 
-	        #merge from right to left on 'epoc' column. Nearest match with 5ms tolerance
-			left = pd.merge_asof(left,right,on='epoc (ms)',direction='nearest',tolerance=5)
+            #merge from right to left on 'epoc' column. Nearest match with 5ms tolerance
+            left = pd.merge_asof(left,right,on='epoc (ms)',direction='nearest',tolerance=5)
 
-	    #all files are now merged into the "left" file
-		dest_file_path = dest + '/merged.csv'
+        #all files are now merged into the "left" file
+        dest_file_path = dest + '/merged.csv'
 
-	    #don't print out index
-		left.to_csv(dest_file_path,index=False)
+        #don't print out index and
+		# truncate floats to three decimal places (which is the largest provided by input/source)
+        left.to_csv(dest_file_path,index=False,float_format="%.3f")
 
-		self.log.append("Successfully merged files in dest/merged.csv")
+        self.log.append("Successfully merged files in dest/merged.csv")
 
-	def run(self):
-		"""Run functions."""
+    def run(self):
+        """Run functions."""
 
-		self.make_paths_absolute()
-		self.validate_folders()
-		self.main()
-		
+        self.make_paths_absolute()
+        self.validate_folders()
+        self.main()
