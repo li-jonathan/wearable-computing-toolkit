@@ -27,15 +27,12 @@ class App(tk.Frame):
 
 		self.master.title("Wearable Computing Toolkit")
 		self.master.config(background = "white") 
-		# p1 = PhotoImage(file = 'icon.png') 
-		# self.master.iconphoto(False, p1)
 		self.master.minsize(900, 300)
 
 		self.src_dir = None
 		self.dest_dir = None
 		self.merged_file = None
 		self.activities = None
-
 
 	def create_combine_files_widgets(self):
 		"""Widgets for combine files from source into destination."""
@@ -146,7 +143,6 @@ class App(tk.Frame):
 		selected_file = filedialog.askopenfilename(parent=root, initialdir=os.getcwd(), title='Please select the merged file')
 		self.merged_file = selected_file[selected_file.rfind("/", 0, selected_file.rfind("/"))+1:]
 		self.merged_file_lbl["text"] = self.merged_file
-		#self.merged_file_lbl["text"] = selected_file
 
 	def label_datasets(self):
 		self.activities = self.activities_list.get("1.0",END)
@@ -154,6 +150,7 @@ class App(tk.Frame):
 		ld.run()
 
 if __name__ == '__main__':
+
 	root = tk.Tk()
 	app = App(master=root)
 	app.mainloop()
