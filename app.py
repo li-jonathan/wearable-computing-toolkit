@@ -137,6 +137,9 @@ class App(tk.Frame):
 		lbl_datasets_btn["command"] = self.label_datasets
 		lbl_datasets_btn.grid(row=5, column=0, columnspan=3, padx=5, pady=5)
 
+	def exit(self):
+		self.master.destroy()
+
 	def browse_merged_file(self):
 		"""Browse for source directory."""
 
@@ -152,5 +155,8 @@ class App(tk.Frame):
 if __name__ == '__main__':
 
 	root = tk.Tk()
+
+	#root.protocol("WM_DELETE_WINDOW")
+
 	app = App(master=root)
 	app.mainloop()

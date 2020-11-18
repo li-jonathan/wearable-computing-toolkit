@@ -35,7 +35,7 @@ class LabelDatasets:
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(900, 500)
+		self.root.minsize(900, 550)
 
 	def create_gui(self):
 
@@ -56,11 +56,16 @@ class LabelDatasets:
 		self.range_lbl.grid(row=1, column=0, columnspan=5, padx=5, pady=5)
 
 		done_btn = tk.Button(self.mainframe, text=("Apply changes to " + self.merged_filename))
+		done_btn["command"] = self.exit
 		done_btn.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
+
+	def exit(self):
+		print("done with label datasets")
+		self.root.destroy()
 
 	def confirm_range(self):
 		self.activity_ranges[self.activities_list.get()] = [self.curStart, self.curEnd]
-		print(self.activity_ranges)
+		print(self.activities_list.get() + ": [" + str(self.curStart) + ", " + str(self.curEnd) + "]")
 
 	def create_plot(self):
 
@@ -104,7 +109,6 @@ class LabelDatasets:
 			for row in plots:
 				for i in range(len(self.headers)):
 					self.values[i].append(float(row[i]))
-
 
 	def run(self):
 		self.init_app()
