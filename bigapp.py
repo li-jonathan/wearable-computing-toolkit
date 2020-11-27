@@ -38,7 +38,7 @@ class App(tk.Frame):
 
 	def close_window(self):
 
-		# figure out if span or canvas
+		# figure out if span or canvas. might not need either?
 		# if hasattr(App, 'span'):
 		# 	self.span.remove()
 		# if hasattr(App, 'canvas'):
