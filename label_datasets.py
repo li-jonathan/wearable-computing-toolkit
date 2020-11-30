@@ -1,23 +1,26 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.widgets import SpanSelector
 import os
 import csv
+
+# tkinter imports
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
-# Implement the default Matplotlib key bindings.
+# matplotlib imports
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+from matplotlib.widgets import SpanSelector
 
 class LabelDatasets:
 
 	def __init__(self, filename, activities):
 		"""Constructor."""
 		self.root = tk.Tk()
+		self.root.protocol("WM_DELETE_WINDOW", self.close_window)
+		
 		self.mainframe = Frame(self.root, bg="white")
 
 		self.merged_filename = filename
@@ -29,6 +32,16 @@ class LabelDatasets:
 
 		self.curStart = None
 		self.curEnd = None
+
+	def close_window(self):
+		"""Close window."""
+
+		print("close label datasets window.\n ranges:")
+		for key, value in self.activity_ranges.items():
+			print(key, ' : ', value)
+
+		self.root.quit()
+		self.root.destroy()
 
 	def init_app(self):
 		"""Initialize app settings and variables."""
@@ -56,30 +69,28 @@ class LabelDatasets:
 		self.range_lbl.grid(row=1, column=0, columnspan=5, padx=5, pady=5)
 
 		done_btn = tk.Button(self.mainframe, text=("Apply changes to " + self.merged_filename))
-		done_btn["command"] = self.exit
+		done_btn["command"] = self.label_file
 		done_btn.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
 
-	def exit(self):
-		print("done with label datasets")
-		self.root.destroy()
-
 	def confirm_range(self):
-		self.activity_ranges[self.activities_list.get()] = [self.curStart, self.curEnd]
-		print(self.activities_list.get() + ": [" + str(self.curStart) + ", " + str(self.curEnd) + "]")
+
+		current_activity = self.activities_list.get()
+
+		if current_activity not in self.activity_ranges:
+			self.activity_ranges[current_activity] = []
+
+		self.activity_ranges[current_activity].append([self.curStart, self.curEnd])
 
 	def create_plot(self):
 
-		hdrs = self.headers
-		y = self.values
-
 		fig, ax1 = plt.subplots(figsize=(8, 4))
 		ax1.set(facecolor='#FFFFCC')
-		ax1.set_xlabel(hdrs[0])
+		ax1.set_xlabel(self.headers[0])
 		ax1.set_ylabel("Data Points")
 
-		x = y[0]
-		for i in range(1, len(y)):
-			ax1.plot(x, y[i], label=hdrs[i])
+		x = self.values[0]
+		for i in range(1, len(self.values)):
+			ax1.plot(x, self.values[i], label=self.headers[i])
 
 		canvas = FigureCanvasTkAgg(fig, self.mainframe)
 		canvas.draw()
@@ -97,8 +108,14 @@ class LabelDatasets:
 			self.range_lbl["text"] = "[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
+
+	def label_file(self):
+		# label csv file with activities
+		self.close_window
 	
 	def read_file(self):
+		"""Reads file to find headers and values."""
+
 		with open(self.merged_filename,'r') as csvfile:
 			plots = csv.reader(csvfile, delimiter=',')
 

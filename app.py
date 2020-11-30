@@ -1,9 +1,13 @@
+import os
+
+# tkinter imports
 from tkinter import *
 import tkinter as tk
-from tkinter import filedialog 
+from tkinter import filedialog
+from tkinter import messagebox 
+
 from combine_files import CombineFiles
 from label_datasets import LabelDatasets
-import os
 
 # usage: python app.py
 
@@ -14,6 +18,7 @@ class App(tk.Frame):
 
 		super().__init__(master)
 		self.master = master
+		self.master.protocol("WM_DELETE_WINDOW", self.close_window)
 
 		self.cf_frame = Frame(master, bg="white") # combine files frame
 		self.ld_frame = Frame(master, bg="white") # label datasets frame
@@ -22,6 +27,12 @@ class App(tk.Frame):
 		self.create_combine_files_widgets()
 		self.create_label_datasets_widgets()
 
+	def close_window(self):
+		"""Close window."""
+
+		self.master.quit()
+		self.master.destroy()
+
 	def init_app(self):
 		"""Initialize app settings and variables."""
 
@@ -29,13 +40,13 @@ class App(tk.Frame):
 		self.master.config(background = "white") 
 		self.master.minsize(900, 300)
 
-		self.src_dir = None
-		self.dest_dir = None
-		self.merged_file = None
-		self.activities = None
+		self.src_dir = None			# source directory
+		self.dest_dir = None		# destination directory
+		self.merged_file = None		# merged csv filename
+		self.activities = None		# comma list of activites
 
 	def create_combine_files_widgets(self):
-		"""Widgets for combine files from source into destination."""
+		"""Widgets to combine files from source into destination."""
 
 		self.cf_frame.pack(side="left", padx=10, pady=10)
 
@@ -44,31 +55,31 @@ class App(tk.Frame):
 		label = tk.Label(self.cf_frame, bg="white", text="Merge and align data streams", font=("Arial 18 bold"))
 		label.grid(row=0, column=0, columnspan=3, pady=5)
 
-		# choose src dir label
+		# choose source directory label
 		src_dir_prompt = tk.Label(self.cf_frame, text="Choose source directory", bg="white")
 		src_dir_prompt.grid(row=1, column=0, padx=5, pady=5, sticky=W)
 
-		# browse src dir button
+		# browse source directory button
 		src_bf_btn = tk.Button(self.cf_frame, text="Browse...")
 		src_bf_btn["command"] = self.browse_src_dir
 		src_bf_btn.grid(row=1, column=1, padx=5, pady=5)
 
-		# display selected src dir
+		# display selected source directory
 		self.src_dir_lbl = tk.Label(self.cf_frame, bg="white")
 		self.src_dir_lbl.grid(row=1, column=2, padx=5, pady=5)
 
 		### FIND DESTINATION DIRECTORY ###
 
-		# choose dest dir label
+		# choose destination directory label
 		dest_dir_prompt = tk.Label(self.cf_frame, text="Choose destination directory", bg="white")
 		dest_dir_prompt.grid(row=2, column=0, padx=5, pady=5, sticky=W)
 
-		# browse dest dir button
+		# browse destination directory button
 		dest_bf_btn = tk.Button(self.cf_frame, text="Browse...")
 		dest_bf_btn["command"] = self.browse_dest_dir
 		dest_bf_btn.grid(row=2, column=1, padx=5, pady=5)
 
-		# display selected dest dir
+		# display selected destination directory
 		self.dest_dir_lbl = tk.Label(self.cf_frame, bg="white")
 		self.dest_dir_lbl.grid(row=2, column=2, padx=5, pady=5)
 
@@ -106,7 +117,6 @@ class App(tk.Frame):
 			self.combine_files_log.insert(tk.END, l + "\n");
 		self.combine_files_log.config(state=DISABLED)
 
-
 	def create_label_datasets_widgets(self):
 		"""Widgets to label datasets with activities"""
 
@@ -125,8 +135,8 @@ class App(tk.Frame):
 		self.merged_file_lbl.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
 
 		# list activities label
-		num_activities_lbl = tk.Label(self.ld_frame, text="List activities (comma separated)", bg="white")
-		num_activities_lbl.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
+		activities_lbl = tk.Label(self.ld_frame, text="List activities (comma separated)", bg="white")
+		activities_lbl.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
 
 		# list of activities
 		self.activities_list = tk.Text(self.ld_frame, bg="white", width=50, height=4)
@@ -137,9 +147,6 @@ class App(tk.Frame):
 		lbl_datasets_btn["command"] = self.label_datasets
 		lbl_datasets_btn.grid(row=5, column=0, columnspan=3, padx=5, pady=5)
 
-	def exit(self):
-		self.master.destroy()
-
 	def browse_merged_file(self):
 		"""Browse for source directory."""
 
@@ -148,15 +155,15 @@ class App(tk.Frame):
 		self.merged_file_lbl["text"] = self.merged_file
 
 	def label_datasets(self):
+		"""Label datasets."""
+
 		self.activities = self.activities_list.get("1.0",END)
 		ld = LabelDatasets(self.merged_file, self.activities)
 		ld.run()
+		messagebox.showinfo("Label Datasets Status", "Successfully labeled activities.") 
 
 if __name__ == '__main__':
 
 	root = tk.Tk()
-
-	#root.protocol("WM_DELETE_WINDOW")
-
 	app = App(master=root)
 	app.mainloop()
