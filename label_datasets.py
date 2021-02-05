@@ -32,13 +32,10 @@ class LabelDatasets:
 
 		self.curStart = None
 		self.curEnd = None
+		self.curRanges = []
 
 	def close_window(self):
 		"""Close window."""
-
-		print("close label datasets window.\n ranges:")
-		for key, value in self.activity_ranges.items():
-			print(key, ' : ', value)
 
 		self.root.quit()
 		self.root.destroy()
@@ -59,18 +56,21 @@ class LabelDatasets:
 
 		self.activities_list = ttk.Combobox(self.mainframe, textvariable=tk.StringVar(), state="readonly", width=50)
 		self.activities_list['values'] = self.activities
-		self.activities_list.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
+		self.activities_list.grid(row=0, column=1, columnspan=2, padx=5, pady=5)
+
+		self.ranges = tk.Text(self.mainframe, bg="white", width=40, height=25)
+		self.ranges.grid(row=0, column=4, rowspan=3, padx=5, pady=5)
 
 		confirm_range_btn = tk.Button(self.mainframe, text="Confirm range")
 		confirm_range_btn["command"] = self.confirm_range
-		confirm_range_btn.grid(row=0, column=4, padx=5, pady=5)
+		confirm_range_btn.grid(row=1, column=2, padx=5, pady=5)
 
 		self.range_lbl = tk.Label(self.mainframe, bg="white")
-		self.range_lbl.grid(row=1, column=0, columnspan=5, padx=5, pady=5)
+		self.range_lbl.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
 
-		done_btn = tk.Button(self.mainframe, text=("Apply changes to " + self.merged_filename))
-		done_btn["command"] = self.label_file
-		done_btn.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
+		# done_btn = tk.Button(self.mainframe, text=("Apply changes to " + self.merged_filename))
+		# done_btn["command"] = self.label_file
+		# done_btn.grid(row=3, column=0, columnspan=5, padx=5, pady=5)
 
 	def confirm_range(self):
 
@@ -79,7 +79,13 @@ class LabelDatasets:
 		if current_activity not in self.activity_ranges:
 			self.activity_ranges[current_activity] = []
 
-		self.activity_ranges[current_activity].append([self.curStart, self.curEnd])
+		for l in self.curRanges:
+			self.activity_ranges[current_activity].append(l)
+
+		self.curRanges = []
+		self.range_lbl["text"] = ""
+
+		self.update_range_list()
 
 	def create_plot(self):
 
@@ -94,7 +100,7 @@ class LabelDatasets:
 
 		canvas = FigureCanvasTkAgg(fig, self.mainframe)
 		canvas.draw()
-		canvas.get_tk_widget().grid(row=2, column=0, columnspan=5)
+		canvas.get_tk_widget().grid(row=2, column=0, columnspan=4)
 
 		def onselect_func(xmin, xmax):
 			indmin, indmax = np.searchsorted(self.values[0], (xmin, xmax))
@@ -105,10 +111,28 @@ class LabelDatasets:
 
 			self.curStart = thisx[0]
 			self.curEnd = thisx[-1]
-			self.range_lbl["text"] = "[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
 
-		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
+			self.curRanges.append([self.curStart, self.curEnd])
 
+			if len(self.range_lbl["text"]) == 0:
+				self.range_lbl["text"] = "[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
+			else:
+				self.range_lbl["text"] = self.range_lbl["text"] + "\n[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
+
+		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, span_stays=True, rectprops=dict(alpha=0.5, facecolor='red'))
+
+	def update_range_list(self):
+		
+		self.ranges.delete("1.0","end")
+
+		for k, v in self.activity_ranges.items():
+			print(k)
+			self.ranges.insert(tk.END, str(k) + "\n")
+			for i in range(0, len(v)):
+				entry = str(i) + ": " + str(v[i])
+				print(entry)
+				self.ranges.insert(tk.END, entry + "\n")
+	
 	def label_file(self):
 		# label csv file with activities
 		self.close_window

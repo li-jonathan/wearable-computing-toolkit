@@ -38,7 +38,7 @@ class App(tk.Frame):
 
 		self.master.title("Wearable Computing Toolkit")
 		self.master.config(background = "white") 
-		self.master.minsize(900, 300)
+		self.master.minsize(930, 300)
 
 		self.src_dir = None			# source directory
 		self.dest_dir = None		# destination directory
@@ -114,7 +114,7 @@ class App(tk.Frame):
 
 		# show logs for combining files
 		for l in cf.log:
-			self.combine_files_log.insert(tk.END, l + "\n");
+			self.combine_files_log.insert(tk.END, l + "\n")
 		self.combine_files_log.config(state=DISABLED)
 
 	def create_label_datasets_widgets(self):
@@ -140,7 +140,7 @@ class App(tk.Frame):
 
 		# list of activities
 		self.activities_list = tk.Text(self.ld_frame, bg="white", width=50, height=4)
-		self.activities_list.grid(row=4, column=1, columnspan=3, padx=5, pady=5)
+		self.activities_list.grid(row=4, column=0, columnspan=3, padx=5, pady=5)
 
 		# label datasets button
 		lbl_datasets_btn = tk.Button(self.ld_frame, text="Label datasets")
