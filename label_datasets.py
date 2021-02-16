@@ -18,10 +18,12 @@ class LabelDatasets:
 
 	def __init__(self, filename, activities):
 		"""Constructor."""
+
 		self.root = tk.Tk()
 		self.root.protocol("WM_DELETE_WINDOW", self.close_window)
 		
 		self.mainframe = Frame(self.root, bg="white")
+		self.deleteframe = Frame(self.mainframe, bg="white")
 
 		self.merged_filename = filename
 		self.activities = [act.strip() for act in activities.split(",")]
@@ -51,6 +53,8 @@ class LabelDatasets:
 
 		self.mainframe.pack(side="top", padx=10, pady=10)
 
+		### ACTIVITY SELECTION ###
+
 		select_activity_lbl = tk.Label(self.mainframe, text="Choose activity", bg="white")
 		select_activity_lbl.grid(row=0, column=0, padx=5, pady=5)
 
@@ -58,15 +62,30 @@ class LabelDatasets:
 		self.activities_list['values'] = self.activities
 		self.activities_list.grid(row=0, column=1, columnspan=2, padx=5, pady=5)
 
-		self.ranges = tk.Text(self.mainframe, bg="white", width=40, height=25)
-		self.ranges.grid(row=0, column=4, rowspan=3, padx=5, pady=5)
-
-		confirm_range_btn = tk.Button(self.mainframe, text="Confirm range")
-		confirm_range_btn["command"] = self.confirm_range
-		confirm_range_btn.grid(row=1, column=2, padx=5, pady=5)
+		### SELECTED RANGES ###
 
 		self.range_lbl = tk.Label(self.mainframe, bg="white")
 		self.range_lbl.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+
+		### DELETE A RANGE SELECTION ###
+
+		# choose index of which range to delete
+		self.delete_entry = tk.Entry(self.deleteframe, bg="white")
+		self.delete_entry.grid(row=0, column=0, padx=5, pady=5)
+
+		confirm_delete_btn = tk.Button(self.deleteframe, text="Confirm delete")
+		confirm_delete_btn["command"] = self.remove_range_selection
+		confirm_delete_btn.grid(row=1, column=0, padx=5, pady=5)
+
+		self.deleteframe.grid(row=1, column=2, padx=5, pady=5)
+
+
+		confirm_range_btn = tk.Button(self.mainframe, text="Confirm range")
+		confirm_range_btn["command"] = self.confirm_range
+		confirm_range_btn.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
+
+		self.ranges = tk.Text(self.mainframe, bg="white", width=40, height=25)
+		self.ranges.grid(row=0, column=3, rowspan=4, padx=5, pady=5)
 
 		# done_btn = tk.Button(self.mainframe, text=("Apply changes to " + self.merged_filename))
 		# done_btn["command"] = self.label_file
@@ -75,6 +94,9 @@ class LabelDatasets:
 	def confirm_range(self):
 
 		current_activity = self.activities_list.get()
+		if len(current_activity) == 0:
+			self.ranges.insert(tk.END, "No activity selected")
+			return
 
 		if current_activity not in self.activity_ranges:
 			self.activity_ranges[current_activity] = []
@@ -100,7 +122,7 @@ class LabelDatasets:
 
 		canvas = FigureCanvasTkAgg(fig, self.mainframe)
 		canvas.draw()
-		canvas.get_tk_widget().grid(row=2, column=0, columnspan=4)
+		canvas.get_tk_widget().grid(row=3, column=0, columnspan=3)
 
 		def onselect_func(xmin, xmax):
 			indmin, indmax = np.searchsorted(self.values[0], (xmin, xmax))
@@ -114,23 +136,49 @@ class LabelDatasets:
 
 			self.curRanges.append([self.curStart, self.curEnd])
 
-			if len(self.range_lbl["text"]) == 0:
-				self.range_lbl["text"] = "[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
-			else:
-				self.range_lbl["text"] = self.range_lbl["text"] + "\n[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
+			# if len(self.range_lbl["text"]) == 0:
+			# 	self.range_lbl["text"] = "[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
+			# else:
+			# 	self.range_lbl["text"] = self.range_lbl["text"] + "\n[" + str(self.curStart) + ", " + str(self.curEnd) + "]"
+
+			self.update_ranges()
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, span_stays=True, rectprops=dict(alpha=0.5, facecolor='red'))
 
+	def update_ranges(self):
+		self.range_lbl["text"] = ""
+		for i in range(0, len(self.curRanges)):
+			self.range_lbl["text"] += str(i) + ": " + str(self.curRanges[i]) + "\n"
+
+	def remove_range_selection(self):
+		if len(self.delete_entry.get()) == 0:
+			return
+		
+		try:
+			idx = int(self.delete_entry.get())
+
+			if idx < 0 or idx >= len(self.curRanges):
+				print("index out of range")
+				return
+
+			element_to_remove = self.curRanges[idx]
+			self.curRanges.remove(element_to_remove)
+
+			self.delete_entry.delete(0, 'end')
+			self.update_ranges()
+
+		except ValueError:
+			print("must be number")
+			return
+	
 	def update_range_list(self):
 		
 		self.ranges.delete("1.0","end")
 
 		for k, v in self.activity_ranges.items():
-			print(k)
 			self.ranges.insert(tk.END, str(k) + "\n")
 			for i in range(0, len(v)):
 				entry = str(i) + ": " + str(v[i])
-				print(entry)
 				self.ranges.insert(tk.END, entry + "\n")
 	
 	def label_file(self):
