@@ -4,7 +4,6 @@ import os
 from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import messagebox 
 
 from combine_files import CombineFiles
 from label_datasets import LabelDatasets
@@ -158,9 +157,12 @@ class App(tk.Frame):
 		"""Label datasets."""
 
 		self.activities = self.activities_list.get("1.0",END)
+
+		if len(self.activities) == 0:
+			messagebox.showinfo("Error", "No activities entered.")
+
 		ld = LabelDatasets(self.merged_file, self.activities)
 		ld.run()
-		messagebox.showinfo("Label Datasets Status", "Successfully labeled activities.") 
 
 if __name__ == '__main__':
 

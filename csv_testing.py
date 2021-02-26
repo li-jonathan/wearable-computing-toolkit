@@ -3,28 +3,15 @@ import pandas as pd
 
 
 def read_file2():
-    data = pd.read_csv('base.csv')
+    data = pd.read_csv('empty.csv')
 
-    headers = list(data.columns.values)
-    print(type(headers[0]))
+    if data.empty:
+        print("empty")
 
-    test = in_range(data[headers[0]])
-
-    for t in test:
-        print(type(t))
+    # headers = list(data.columns.values)
+    # print(type(headers[0]))
 
 
-    data['Activity'] = ""
-    data.to_csv('output.csv', index=False)
-
-def in_range(vals):
-    acts = []
-
-    for x in vals:
-        print(float(x))
-        acts.append(float(x))
-
-    return acts
 
 def main():
     read_file2()

@@ -7,7 +7,8 @@ import csv
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
-from tkinter import scrolledtext 
+from tkinter import scrolledtext
+from tkinter import messagebox 
 
 # matplotlib imports
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -34,24 +35,60 @@ class LabelDatasets:
 		self.headers = []
 		self.values = []
 
-		self.activity_ranges = {}
+		self.activity_ranges = {}	# activities mapped with a list of their ranges
 
-		self.cur_start = None	# current start of range selected
-		self.cur_end = None		# current end of range selected
+		self.cur_start = None		# current start of range selected
+		self.cur_end = None			# current end of range selected
 		self.cur_ranges = []		# list of all current selected ranges
+
+	def activity_in_range(self, time):
+		"""Returns the activity that the given time falls into."""
+		
+		act = "Unknown"
+
+		# k = activity
+		# v = list of ranges
+		for k,v in self.activity_ranges.items():
+			for i in range(0, len(v)):
+				start = float(v[i][0])
+				end = float(v[i][1])
+				if float(time) >= start and float(time) <= end:
+					act = k
+		
+		return act
+
+	def assign_activities(self, times):
+		"""Creates list of activities instead of times."""
+
+		acts = []
+		for t in times:
+			acts.append(self.activity_in_range(t))
+		return acts
 
 	def close_window(self):
 		"""Close window."""
 
 		self.root.quit()
 		self.root.destroy()
+	
+	def confirm_range(self):
+		"""Confirm the selected ranges to assign to the activity."""
 
-	def init_app(self):
-		"""Initialize app settings and variables."""
+		current_activity = self.activities_list.get()
+		if len(current_activity) == 0:
+			messagebox.showinfo("Error", "No activity selected.")
+			return
 
-		self.root.title("Label Datasets")
-		self.root.config(background = "white") 
-		self.root.minsize(1200, 700)
+		if current_activity not in self.activity_ranges:
+			self.activity_ranges[current_activity] = []
+
+		# add the ranges selected to activity 
+		for r in self.cur_ranges:
+			self.activity_ranges[current_activity].append(r)
+
+		self.cur_ranges = []
+		self.current_range_selections.delete('1.0', END)
+		self.update_range_list()
 
 	def create_gui(self):
 		"""Create widgets."""
@@ -91,31 +128,16 @@ class LabelDatasets:
 
 		self.range_edits_frame.grid(row=1, column=0)
 
-		# SELECTED RANGES
+		### SELECTED RANGES ###
 
 		self.all_ranges = scrolledtext.ScrolledText(self.main_frame, wrap = tk.WORD, bg="white", width=40, height=15)
 		self.all_ranges.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
 
+		### APPLY CHANGES ###
+
 		done_btn = tk.Button(self.main_frame, text=("Apply changes to " + self.merged_filename))
 		done_btn["command"] = self.label_file
 		done_btn.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
-
-	def confirm_range(self):
-
-		current_activity = self.activities_list.get()
-		if len(current_activity) == 0:
-			self.all_ranges.insert(tk.END, "No activity selected")
-			return
-
-		if current_activity not in self.activity_ranges:
-			self.activity_ranges[current_activity] = []
-
-		for l in self.cur_ranges:
-			self.activity_ranges[current_activity].append(l)
-
-		self.cur_ranges = []
-		self.current_range_selections.delete('1.0', END)
-		self.update_range_list()
 
 	def create_plot(self):
 		"""Read csv file and create plot."""
@@ -152,92 +174,39 @@ class LabelDatasets:
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
 
-	def update_ranges(self):
-		"""Update the current range selections text box."""
+		def init_app(self):
+		"""Initialize app settings and variables."""
 
-		# TODO: error prevention if user tries to manually edit text box
+		self.root.title("Label Datasets")
+		self.root.config(background = "white") 
+		self.root.minsize(1200, 700)
 
-		self.current_range_selections.delete('1.0', END)
-		for i in range(0, len(self.cur_ranges)):
-			self.current_range_selections.insert(END, str(i) + ": " + str(self.cur_ranges[i]) + "\n")
-
-	def remove_range_selection(self):
-		"""Remove a range from the current selection."""
-
-		if len(self.delete_entry.get()) == 0:
-			print("no index selected")
-			return
-		
-		try:
-			idx = int(self.delete_entry.get())
-
-			if idx < 0 or idx >= len(self.cur_ranges):
-				print("index out of range")
-				return
-
-			element_to_remove = self.cur_ranges[idx]
-			self.cur_ranges.remove(element_to_remove)
-
-			self.delete_entry.delete(0, 'end')
-			self.update_ranges()
-
-		except ValueError:
-			print("must be number")
-			return
-	
-	def update_range_list(self):
-		"""Update the list of all confirmed ranges."""
-		
-		self.all_ranges.delete("1.0","end")
-
-		for k, v in self.activity_ranges.items():
-			self.all_ranges.insert(tk.END, str(k) + "\n")
-			for i in range(0, len(v)):
-				entry = str(i) + ": " + str(v[i])
-				self.all_ranges.insert(tk.END, entry + "\n")
-	
 	def label_file(self):
-		"""Label csv file with associated activity"""
+		"""Label csv file with associated activities."""
 
-		for k,v in self.activity_ranges.items():
-			print("activity=" + str(k))
-			for i in range(0, len(v)):
-				print(v[i])
+		# debugging: print activites and its ranges
+		# for k,v in self.activity_ranges.items():
+		# 	print("activity=" + str(k))
+		# 	for i in range(0, len(v)):
+		# 		print(v[i])
 
+		# TODO: validate csv is not empty?
+
+		# read csv file and get first header
 		data = pd.read_csv(self.merged_filename)
 		output_filename = self.merged_filename.replace(".csv", "-output.csv")
-		headers = list(data.columns.values)
+		header1 = list(data.columns.values)[0]
 
-		activities_to_write = self.assign_activities(data[headers[0]])
+		# get list of activities at each time
+		activities_to_write = self.assign_activities(data[header1])
 
+		# write those activities to new csv file
 		data['Activity'] = activities_to_write
 		data.to_csv(output_filename, index=False)
 		
 		self.root.quit()
 		self.root.destroy()
 
-	def assign_activities(self, times):
-		acts = []
-		for t in times:
-			acts.append(self.activity_in_range(t))
-		return acts
-
-
-	def activity_in_range(self, x):
-		"""Returns the activity with a range that the given value falls into."""
-		
-		act = "Unknown"
-
-		for k,v in self.activity_ranges.items():
-			for i in range(0, len(v)):
-				start = float(v[i][0])
-				end = float(v[i][1])
-				if float(x) >= start and float(x) <= end:
-					act = k
-		
-		return act
-
-	
 	def read_file(self):
 		"""Reads file to find headers and values."""
 
@@ -251,6 +220,57 @@ class LabelDatasets:
 			for row in plots:
 				for i in range(len(self.headers)):
 					self.values[i].append(float(row[i]))
+
+	def remove_range_selection(self):
+		"""Remove a range from the current selection."""
+
+		# check there was index entered
+		if len(self.delete_entry.get()) == 0:
+			messagebox.showinfo("Error", "No index entered.")
+			self.delete_entry.delete(0, 'end')
+			return
+		
+		try:
+			idx = int(self.delete_entry.get())
+
+			# check valid index
+			if idx < 0 or idx >= len(self.cur_ranges):
+				messagebox.showinfo("Error", "Index out of range.")
+				self.delete_entry.delete(0, 'end')
+				return
+
+			# remove the range from current selections
+			element_to_remove = self.cur_ranges[idx]
+			self.cur_ranges.remove(element_to_remove)
+
+			# clear entry and update current selection box
+			self.delete_entry.delete(0, 'end')
+			self.update_ranges()
+
+		except ValueError:
+			messagebox.showinfo("Error", "Must be a number.")
+			self.delete_entry.delete(0, 'end')
+			return
+
+	def update_ranges(self):
+		"""Update the current range selections text box."""
+
+		# TODO: error prevention if user tries to manually edit text box
+
+		self.current_range_selections.delete('1.0', END)
+		for i in range(0, len(self.cur_ranges)):
+			self.current_range_selections.insert(END, str(i) + ": " + str(self.cur_ranges[i]) + "\n")
+
+	def update_range_list(self):
+		"""Update the list of all confirmed ranges."""
+		
+		self.all_ranges.delete("1.0","end")
+
+		for k, v in self.activity_ranges.items():
+			self.all_ranges.insert(tk.END, str(k) + "\n")
+			for i in range(0, len(v)):
+				entry = str(i) + ": " + str(v[i])
+				self.all_ranges.insert(tk.END, entry + "\n")
 
 	def run(self):
 		self.init_app()
