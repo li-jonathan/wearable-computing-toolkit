@@ -164,6 +164,8 @@ class App(tk.Frame):
 		ld = LabelDatasets(self.merged_file, self.activities)
 		ld.run()
 
+		self.activities_list.delete(0, 'end')
+
 if __name__ == '__main__':
 
 	root = tk.Tk()

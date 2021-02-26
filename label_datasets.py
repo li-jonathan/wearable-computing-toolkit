@@ -174,12 +174,12 @@ class LabelDatasets:
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
 
-		def init_app(self):
+	def init_app(self):
 		"""Initialize app settings and variables."""
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(1200, 700)
+		self.root.minsize(1280, 720)
 
 	def label_file(self):
 		"""Label csv file with associated activities."""
