@@ -105,6 +105,8 @@ class App(tk.Frame):
 		self.dest_dir = selected_dir[selected_dir.rfind('/')+1:] + "/"
 		self.dest_dir_lbl["text"] = self.dest_dir
 
+		#TODO: allow search into "dest" directory for subdirectories if choose "dest/long" as dest folder
+
 	def combine_files(self):
 		"""Combine files using src and dest."""
 

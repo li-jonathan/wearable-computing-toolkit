@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import os
 import csv
+import time
+import datetime
 
 # tkinter imports
 from tkinter import *
@@ -11,11 +13,14 @@ from tkinter import scrolledtext
 from tkinter import messagebox 
 
 # matplotlib imports
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg	
+from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
+
+from matplotlib.backend_bases import key_press_handler
 import matplotlib.pyplot as plt
 from matplotlib.widgets import SpanSelector
+import matplotlib.dates as mdate
 
 class LabelDatasets:
 
@@ -142,29 +147,65 @@ class LabelDatasets:
 	def create_plot(self):
 		"""Read csv file and create plot."""
 
-		fig, ax1 = plt.subplots(figsize=(12, 4))
+		fig, ax1 = plt.subplots(figsize=(10, 4))
 
 		# figure properties
 		ax1.set(facecolor='#FFFFCC')
-		ax1.set_xlabel(self.headers[0])
+		ax1.set_xlabel("Date & Time")
 		ax1.set_ylabel("Data Points")
 
-		# plot values
-		x = self.values[0]
 		for i in range(1, len(self.values)):
-			ax1.plot(x, self.values[i], label=self.headers[i])
+			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=1.0, linestyle='solid')
+
+		# convert epoch to datetime
+		readable = []
+		for n in self.values[0]:
+			ts = int(n) / 1000
+			utc_time = datetime.datetime.utcfromtimestamp(ts)
+			readable.append(utc_time)
+
+		print(readable[0])
+
+		# plot data
+		for i in range(1, len(self.values)):
+			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=1.0, linestyle='solid')
+
+		# date formatter for x axis
+		date_formatter = mdate.DateFormatter('%d-%m-%y %H:%M:%S')
+		ax1.xaxis.set_major_formatter(date_formatter)
+
+		# set x axis ticks diagonal 
+		fig.autofmt_xdate()
+
+		# fix x axis being cutoff
+		fig.tight_layout()
 
 		# grid canvas on frame
 		canvas = FigureCanvasTkAgg(fig, self.main_frame)
 		canvas.draw()
-		canvas.get_tk_widget().grid(row=2, column=0, columnspan=3)
+		canvas.get_tk_widget().grid(row=2, column=0, columnspan=3, pady=5)
 
 		def onselect_func(xmin, xmax):
-			indmin, indmax = np.searchsorted(self.values[0], (xmin, xmax))
-			indmax = min(len(self.values[0]) - 1, indmax)
 
-			thisx = self.values[0][indmin:indmax]
-			# thisy = self.values[indmin:indmax] # unused right now but may use in future
+			# min epoch = 1601655838056
+			# max epoch = 1601655850394
+
+			# xmin_date = mdate.num2date(xmin)
+			# min_epoch = int(xmin_date.timestamp() * 1000)
+			# print("min epoch =", min_epoch)
+
+			# xmax_date = mdate.num2date(xmax)
+			# max_epoch = int(xmax_date.timestamp() * 1000)
+			# print("max epoch =", max_epoch)
+
+			indmin, indmax = np.searchsorted(readable, (xmin, xmax))
+			indmax = min(len(readable[0]) - 1, indmax)
+
+			thisx = readable[0][indmin:indmax]
+			thisy = self.values[indmin:indmax] # unused right now but may use in future
+
+			print("START =", thisx[0])
+			print("END =", thisx[-1])
 
 			self.cur_start = thisx[0]
 			self.cur_end = thisx[-1]
@@ -174,12 +215,13 @@ class LabelDatasets:
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
 
+
 	def init_app(self):
 		"""Initialize app settings and variables."""
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(1280, 720)
+		self.root.minsize(1280, 750)
 
 	def label_file(self):
 		"""Label csv file with associated activities."""

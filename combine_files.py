@@ -70,7 +70,7 @@ class CombineFiles():
             #TODO: come up with a better method than this. 2Hz sampling error may a lot...
             if abs(initRate - mbient_files[i].sampleRate)>2:
                 self.log.append("Error! All files are not the same sample rate!")
-                return
+                # return
 
 
         #Check #2: See if they all start at the "same" time
@@ -114,7 +114,7 @@ class CombineFiles():
 		# truncate floats to three decimal places (which is the largest provided by input/source)
         left.to_csv(dest_file_path,index=False,float_format="%.3f")
 
-        self.log.append("Successfully merged files in dest/merged.csv")
+        self.log.append("Successfully merged files in " + dest_file_path)
 
     def run(self):
         """Run functions."""
