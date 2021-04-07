@@ -69,7 +69,7 @@ class CombineFiles():
         for i in range(1,len(mbient_files)):
             #TODO: come up with a better method than this. 2Hz sampling error may a lot...
             if abs(initRate - mbient_files[i].sampleRate)>2:
-                self.log.append("Error! All files are not the same sample rate!")
+                self.log.append("[IGNORE] Error! All files are not the same sample rate!")
                 # return
 
 

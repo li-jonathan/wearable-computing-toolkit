@@ -4,6 +4,7 @@ import os
 from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import scrolledtext
 
 from combine_files import CombineFiles
 from label_datasets import LabelDatasets
@@ -88,7 +89,7 @@ class App(tk.Frame):
 		combine_files_btn["command"] = self.combine_files
 		combine_files_btn.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
 
-		self.combine_files_log = tk.Text(self.cf_frame, bg="white", width=50, height=5)
+		self.combine_files_log = scrolledtext.ScrolledText(self.cf_frame, wrap = tk.WORD, bg="white", width=50, height=5)
 		self.combine_files_log.grid(row=4, column=0, columnspan=3, padx=5, pady=5)
 
 	def browse_src_dir(self):

@@ -53,10 +53,11 @@ class MBientDataFile:
 
 		#delete un-needed column
 
-		del df['timestamp (-0400)'] #delete UTC timestamp column
-
-		#TODO: check to see which column exixts and then delete it based upon time
-		#del df['timestamp (-0500)']  # delete UTC timestamp column
+		#delete UTC timestamp column
+		if 'timestamp (-0400)' in df.columns:
+			del df['timestamp (-0400)']
+		if 'timestamp (-0500)' in df.columns:
+			del df['timestamp (-0500)']
 
 		del df['elapsed (s)'] #delete elapse column
 

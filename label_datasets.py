@@ -13,9 +13,8 @@ from tkinter import scrolledtext
 from tkinter import messagebox 
 
 # matplotlib imports
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg	
-from matplotlib.backend_bases import NavigationToolbar2
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 from matplotlib.backend_bases import key_press_handler
 import matplotlib.pyplot as plt
@@ -33,6 +32,7 @@ class LabelDatasets:
 		self.main_frame = Frame(self.root, bg="white")				# main frame
 		self.activities_frame = Frame(self.main_frame, bg="white")	# activities frame		
 		self.range_edits_frame = Frame(self.main_frame, bg="white")	# edit options frame
+		self.plot_frame = Frame(self.main_frame, bg="white")		# plotting frame
 
 		self.merged_filename = filename
 		self.activities = [act.strip() for act in activities.split(",")]
@@ -154,9 +154,6 @@ class LabelDatasets:
 		ax1.set_xlabel("Date & Time")
 		ax1.set_ylabel("Data Points")
 
-		for i in range(1, len(self.values)):
-			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=1.0, linestyle='solid')
-
 		# convert epoch to datetime
 		readable = []
 		for n in self.values[0]:
@@ -164,56 +161,47 @@ class LabelDatasets:
 			utc_time = datetime.datetime.utcfromtimestamp(ts)
 			readable.append(utc_time)
 
-		print(readable[0])
-
 		# plot data
 		for i in range(1, len(self.values)):
-			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=1.0, linestyle='solid')
+			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=0.5, linestyle='solid')
 
-		# date formatter for x axis
+		# formatting
 		date_formatter = mdate.DateFormatter('%d-%m-%y %H:%M:%S')
 		ax1.xaxis.set_major_formatter(date_formatter)
-
-		# set x axis ticks diagonal 
 		fig.autofmt_xdate()
-
-		# fix x axis being cutoff
 		fig.tight_layout()
 
-		# grid canvas on frame
-		canvas = FigureCanvasTkAgg(fig, self.main_frame)
+		# grid canvas and toolbar on frame
+		canvas = FigureCanvasTkAgg(fig, self.plot_frame)
 		canvas.draw()
-		canvas.get_tk_widget().grid(row=2, column=0, columnspan=3, pady=5)
+		toolbar = NavigationToolbar2Tk(canvas, self.plot_frame, pack_toolbar=False)
+		toolbar.update()
+
+		# key press handling to use navigation toolbar
+		canvas.mpl_connect("key_press_event", lambda event: print(f"you pressed {event.key}"))
+		canvas.mpl_connect("key_press_event", key_press_handler)
 
 		def onselect_func(xmin, xmax):
+			"""Gets the currently selected range on plot."""
 
-			# min epoch = 1601655838056
-			# max epoch = 1601655850394
+			# on select for date
+			xmin_date = mdate.num2date(xmin)
+			min_epoch = int(xmin_date.timestamp() * 1000)
+			xmax_date = mdate.num2date(xmax)
+			max_epoch = int(xmax_date.timestamp() * 1000)
 
-			# xmin_date = mdate.num2date(xmin)
-			# min_epoch = int(xmin_date.timestamp() * 1000)
-			# print("min epoch =", min_epoch)
-
-			# xmax_date = mdate.num2date(xmax)
-			# max_epoch = int(xmax_date.timestamp() * 1000)
-			# print("max epoch =", max_epoch)
-
-			indmin, indmax = np.searchsorted(readable, (xmin, xmax))
-			indmax = min(len(readable[0]) - 1, indmax)
-
-			thisx = readable[0][indmin:indmax]
-			thisy = self.values[indmin:indmax] # unused right now but may use in future
-
-			print("START =", thisx[0])
-			print("END =", thisx[-1])
-
-			self.cur_start = thisx[0]
-			self.cur_end = thisx[-1]
+			self.cur_start = min_epoch
+			self.cur_end = max_epoch
 			self.cur_ranges.append([self.cur_start, self.cur_end])
 
 			self.update_ranges()
 
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
+
+		toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+		canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+		self.plot_frame.grid(row=2, column=0, columnspan=3, pady=5)
 
 
 	def init_app(self):
@@ -221,17 +209,10 @@ class LabelDatasets:
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(1280, 750)
+		self.root.minsize(1280, 760)
 
 	def label_file(self):
 		"""Label csv file with associated activities."""
-
-		# debugging: print activites and its ranges
-		# for k,v in self.activity_ranges.items():
-		# 	print("activity=" + str(k))
-		# 	for i in range(0, len(v)):
-		# 		print(v[i])
-
 		# TODO: validate csv is not empty?
 
 		# read csv file and get first header
@@ -260,8 +241,18 @@ class LabelDatasets:
 				self.values.append([])
 
 			for row in plots:
+				missing_vals = False
+				cur_vals = []
 				for i in range(len(self.headers)):
-					self.values[i].append(float(row[i]))
+					if len(row[i]) != 0:
+						cur_vals.append(float(row[i]))
+					else:
+						missing_vals = True
+
+				if not missing_vals:
+					for i in range(len(self.headers)):
+						self.values[i].append(cur_vals[i])
+
 
 	def remove_range_selection(self):
 		"""Remove a range from the current selection."""
