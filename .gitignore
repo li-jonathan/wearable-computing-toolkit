@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 venv/
 src/
 dest/
+=======
+/venv
+/dest
+/src
+>>>>>>> 2797c645fdc3c5615c592bf96cea4fb2e4f970c1
 __pycache__
 *.pyc
 __pycache__/
