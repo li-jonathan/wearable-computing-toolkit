@@ -1,6 +1,7 @@
 venv/
 src/
 dest/
+/dest
 __pycache__
 *.pyc
 __pycache__/
