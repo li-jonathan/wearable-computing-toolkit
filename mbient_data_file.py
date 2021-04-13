@@ -5,7 +5,8 @@ import argparse
 
 """
 MBientDataFile class
-From: https://git.cs.jmu.edu/WearableComputing/ActivityRecognition/blob/data_tools/Python/tools/combine_files.py
+
+Written by Jason Forsyth.
 """
 
 #### Begin MBientDataFile Class ####
@@ -23,7 +24,7 @@ class MBientDataFile:
 
 	def _calc_sample_rate_and_start_time(self):
         # read the first 10 rows so we can get the sample rate
-        #TODO: make this not hard coded. Will error is file is less than numRows
+        # TODO: make this not hard coded. Will error is file is less than numRows
 		numRows = 100
 		data = pd.read_csv(self.filePath, nrows=numRows)
 		times = data[self._epoch_column_label]
@@ -51,17 +52,17 @@ class MBientDataFile:
 	def generate_data_frame(self):
 		df = pd.read_csv(self.filePath)
 
-		#delete un-needed column
+		# delete un-needed column
 
-		#delete UTC timestamp column
+		# delete UTC timestamp column
 		if 'timestamp (-0400)' in df.columns:
 			del df['timestamp (-0400)']
 		if 'timestamp (-0500)' in df.columns:
 			del df['timestamp (-0500)']
 
-		del df['elapsed (s)'] #delete elapse column
+		del df['elapsed (s)'] # delete elapse column
 
-        #rename data columns to append sensor name
+        # rename data columns to append sensor name
 		if self.sensorType=='Gyroscope':
 			df=df.rename(columns={'x-axis (deg/s)': str(self.sensorName+"_Gx")})
 			df=df.rename(columns={'y-axis (deg/s)': str(self.sensorName + "_Gy")})

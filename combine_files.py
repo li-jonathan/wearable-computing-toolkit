@@ -7,7 +7,8 @@ from mbient_data_file import MBientDataFile
 
 """
 CombineFiles
-From: https://git.cs.jmu.edu/WearableComputing/ActivityRecognition/blob/data_tools/Python/tools/combine_files.py
+
+Written by Jason Forsyth, modified for Wearable Toolkit.
 """
 
 class CombineFiles():
@@ -45,7 +46,7 @@ class CombineFiles():
         source = self.src_folder
         dest = self.dest_folder
 
-        #get all the files out of the src/ folder
+        # get all the files out of the src/ folder
         input_file_path = source + '/' #this line may no longer be necessary
         files = os.listdir(input_file_path)
 
@@ -56,15 +57,15 @@ class CombineFiles():
                     dataFile= MBientDataFile(input_file_path+file)
                     mbient_files.append(dataFile)
 
-        #basic sanity checking. See if all have same sample right and
-        #if they start are "roughly" the same time
+        # basic sanity checking. See if all have same sample right and
+        # if they start are "roughly" the same time
 
-        #Check #0 Did we get any files?!
+        # Check #0 Did we get any files?!
         if len(mbient_files) == 0:
             self.log.append('No files in source directory. Exiting.')
             return
 
-        #Check #1: See if files are all the same sample right
+        # Check #1: See if files are all the same sample right
         initRate = mbient_files[0].sampleRate
         for i in range(1,len(mbient_files)):
             #TODO: come up with a better method than this. 2Hz sampling error may a lot...
@@ -73,7 +74,7 @@ class CombineFiles():
                 # return
 
 
-        #Check #2: See if they all start at the "same" time
+        # Check #2: See if they all start at the "same" time
         startTimes = list()
         for file in mbient_files:
             startTimes.append(file.startTime)
@@ -88,9 +89,9 @@ class CombineFiles():
             self.log.append("Files have different start times. Synchronizing....")
             synchronize=True
 
-        #generate dataframes from each file. Concat into single file and
-        #if needed to synchronize follow https://mbientlab.com/tutorials/Apps.html#synchronizing-multiple-datasets-in-python
-        #perform left merge based upon the "oldest" file
+        # generate dataframes from each file. Concat into single file and
+        # if needed to synchronize follow https://mbientlab.com/tutorials/Apps.html#synchronizing-multiple-datasets-in-python
+        # perform left merge based upon the "oldest" file
 
         # find the youngest file and make it "left"
 		# (this will be the file with the oldest starting timestamp)
@@ -107,11 +108,10 @@ class CombineFiles():
             #merge from right to left on 'epoc' column. Nearest match with 5ms tolerance
             left = pd.merge_asof(left,right,on='epoc (ms)',direction='nearest',tolerance=5)
 
-        #all files are now merged into the "left" file
+        # all files are now merged into the "left" file
         dest_file_path = dest + '/merged.csv'
 
-        #don't print out index and
-		# truncate floats to three decimal places (which is the largest provided by input/source)
+        # don't print out index and truncate floats to three decimal places (which is the largest provided by input/source)
         left.to_csv(dest_file_path,index=False,float_format="%.3f")
 
         self.log.append("Successfully merged files in " + dest_file_path)
