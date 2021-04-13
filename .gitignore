@@ -1,5 +1,6 @@
-/venv
-/testing
+venv/
+src/
+dest/
 __pycache__
 *.pyc
 __pycache__/
