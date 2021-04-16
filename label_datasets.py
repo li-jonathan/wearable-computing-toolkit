@@ -119,19 +119,23 @@ class LabelDatasets:
 		self.current_range_selections = scrolledtext.ScrolledText(self.range_edits_frame, wrap = tk.WORD, bg="white", width=60, height=7)
 		self.current_range_selections.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
 
+		# index to delete label
+		idx_to_del = tk.Label(self.range_edits_frame, text="Delete index:", bg="white")
+		idx_to_del.grid(row=0, column=1, padx=5, pady=5)
+
 		# choose index of which range to delete
 		self.delete_entry = tk.Entry(self.range_edits_frame, bg="white", width=7)
-		self.delete_entry.grid(row=0, column=1, padx=5, pady=5)
+		self.delete_entry.grid(row=0, column=2, padx=5, pady=5)
 
 		# confirm range to delete
 		confirm_delete_btn = tk.Button(self.range_edits_frame, text="Confirm delete")
 		confirm_delete_btn["command"] = self.remove_range_selection
-		confirm_delete_btn.grid(row=1, column=1, padx=5, pady=5)
+		confirm_delete_btn.grid(row=1, column=1, columnspan=2, padx=5, pady=5)
 
 		# confirm selected ranges to add to all ranges
 		confirm_range_btn = tk.Button(self.range_edits_frame, text="Confirm range(s)")
 		confirm_range_btn["command"] = self.confirm_range
-		confirm_range_btn.grid(row=2, column=1, padx=5, pady=5)
+		confirm_range_btn.grid(row=2, column=1, columnspan=2, padx=5, pady=5)
 
 		self.range_edits_frame.grid(row=1, column=0)
 
@@ -156,6 +160,8 @@ class LabelDatasets:
 		ax1.set_xlabel("Date & Time")
 		ax1.set_ylabel("Data Points")
 
+		ax1.autoscale()
+
 		# convert epoch to datetime
 		readable = []
 		for n in self.values[0]:
@@ -168,7 +174,7 @@ class LabelDatasets:
 			ax1.plot_date(readable, self.values[i], label=self.headers[i], markersize=0.5, linestyle='solid')
 
 		# formatting
-		date_formatter = mdate.DateFormatter('%d-%m-%y %H:%M:%S')
+		date_formatter = mdate.DateFormatter('%H:%M:%S')
 		ax1.xaxis.set_major_formatter(date_formatter)
 		fig.autofmt_xdate()
 		fig.tight_layout()
@@ -180,7 +186,6 @@ class LabelDatasets:
 		toolbar.update()
 
 		# key press handling to use navigation toolbar
-		canvas.mpl_connect("key_press_event", lambda event: print(f"you pressed {event.key}"))
 		canvas.mpl_connect("key_press_event", key_press_handler)
 
 		def onselect_func(xmin, xmax):
@@ -203,7 +208,7 @@ class LabelDatasets:
 		toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 		canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-		self.plot_frame.grid(row=2, column=0, columnspan=3, pady=5)
+		self.plot_frame.grid(row=2, column=0, columnspan=3, pady=5, sticky=N+S+E+W)
 
 
 	def init_app(self):
@@ -211,7 +216,7 @@ class LabelDatasets:
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(1280, 760)
+		self.root.minsize(1260, 770)
 
 	def label_file(self):
 		"""Label csv file with associated activities."""
