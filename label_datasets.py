@@ -16,6 +16,7 @@ from tkinter import messagebox
 
 # matplotlib imports
 from matplotlib.figure import Figure
+from matplotlib.pyplot import figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 from matplotlib.backend_bases import key_press_handler
@@ -31,10 +32,10 @@ class LabelDatasets:
 		self.root = tk.Tk()
 		self.root.protocol("WM_DELETE_WINDOW", self.close_window)
 		
-		self.main_frame = Frame(self.root, bg="white")				# main frame
-		self.activities_frame = Frame(self.main_frame, bg="white")	# activities frame		
-		self.range_edits_frame = Frame(self.main_frame, bg="white")	# edit options frame
-		self.plot_frame = Frame(self.main_frame, bg="white")		# plotting frame
+		self.main_frame = Frame(self.root, bg="white")						# main frame
+		self.activities_frame = Frame(self.main_frame, bg="white")			# everything above the plot	
+		self.range_edits_frame = Frame(self.activities_frame, bg="white")	# editing options for selections
+		self.plot_frame = Frame(self.main_frame, bg="white")				# holds the plot
 
 		self.merged_filename = filename
 		self.activities = [act.strip() for act in activities.split(",")]
@@ -77,7 +78,7 @@ class LabelDatasets:
 
 		self.root.quit()
 		self.root.destroy()
-	
+
 	def confirm_range(self):
 		"""Confirm the selected ranges to assign to the activity."""
 
@@ -100,7 +101,9 @@ class LabelDatasets:
 	def create_gui(self):
 		"""Create widgets."""
 
-		self.main_frame.pack(side="top", padx=10, pady=10)
+		self.main_frame.grid_columnconfigure(0, weight=1)
+		self.main_frame.grid_rowconfigure(2, weight=1)
+		self.main_frame.pack(side="top", padx=10, pady=10, expand=True, fill=tk.BOTH)
 
 		### ACTIVITY SELECTION ###
 
@@ -137,13 +140,13 @@ class LabelDatasets:
 		confirm_range_btn["command"] = self.confirm_range
 		confirm_range_btn.grid(row=2, column=1, columnspan=2, padx=5, pady=5)
 
-		self.range_edits_frame.grid(row=1, column=0)
+		self.range_edits_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
 
 		### SELECTED RANGES ###
 
-		self.all_ranges = scrolledtext.ScrolledText(self.main_frame, wrap = tk.WORD, bg="white", width=40, height=15)
+		self.all_ranges = scrolledtext.ScrolledText(self.activities_frame, wrap = tk.WORD, bg="white", width=40, height=15)
 		self.all_ranges.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
-
+		
 		### APPLY CHANGES ###
 
 		done_btn = tk.Button(self.main_frame, text=("Apply changes to " + self.merged_filename))
@@ -153,14 +156,12 @@ class LabelDatasets:
 	def create_plot(self):
 		"""Read csv file and create plot."""
 
-		fig, ax1 = plt.subplots(figsize=(10, 4))
+		fig, ax1 = plt.subplots()
 
 		# figure properties
 		ax1.set(facecolor='#FFFFCC')
-		ax1.set_xlabel("Date & Time")
+		ax1.set_xlabel("Time")
 		ax1.set_ylabel("Data Points")
-
-		ax1.autoscale()
 
 		# convert epoch to datetime
 		readable = []
@@ -185,7 +186,7 @@ class LabelDatasets:
 		toolbar = NavigationToolbar2Tk(canvas, self.plot_frame, pack_toolbar=False)
 		toolbar.update()
 
-		# key press handling to use navigation toolbar
+		# key press handler to use navigation toolbar
 		canvas.mpl_connect("key_press_event", key_press_handler)
 
 		def onselect_func(xmin, xmax):
@@ -206,9 +207,9 @@ class LabelDatasets:
 		self.span = SpanSelector(ax1, onselect=onselect_func, direction='horizontal', useblit=True, rectprops=dict(alpha=0.5, facecolor='red'))
 
 		toolbar.pack(side=tk.BOTTOM, fill=tk.X)
-		canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+		canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-		self.plot_frame.grid(row=2, column=0, columnspan=3, pady=5, sticky=N+S+E+W)
+		self.plot_frame.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky=tk.NSEW)
 
 
 	def init_app(self):
@@ -216,7 +217,7 @@ class LabelDatasets:
 
 		self.root.title("Label Datasets")
 		self.root.config(background = "white") 
-		self.root.minsize(1260, 770)
+		self.root.minsize(1280, 780)
 
 	def label_file(self):
 		"""Label csv file with associated activities."""
@@ -259,7 +260,6 @@ class LabelDatasets:
 				if not missing_vals:
 					for i in range(len(self.headers)):
 						self.values[i].append(cur_vals[i])
-
 
 	def remove_range_selection(self):
 		"""Remove a range from the current selection."""

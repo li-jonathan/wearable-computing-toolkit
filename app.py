@@ -99,6 +99,8 @@ class App(tk.Frame):
 		self.src_dir = selected_dir[selected_dir.rfind('/')+1:] + "/"
 		self.src_dir_lbl["text"] = self.src_dir
 
+		#TODO: allos search into subdirectories
+
 	def browse_dest_dir(self):
 		"""Browse for destination directory."""
 
