@@ -8,7 +8,7 @@ from mbient_data_file import MBientDataFile
 """
 CombineFiles
 
-Written by Jason Forsyth, modified for Wearable Toolkit.
+Written by Dr. Forsyth, modified for Wearable Toolkit.
 """
 
 class CombineFiles():

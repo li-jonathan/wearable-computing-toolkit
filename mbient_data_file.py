@@ -6,7 +6,7 @@ import argparse
 """
 MBientDataFile class
 
-Written by Jason Forsyth.
+Written by Dr. Forsyth.
 """
 
 #### Begin MBientDataFile Class ####
@@ -51,8 +51,6 @@ class MBientDataFile:
 
 	def generate_data_frame(self):
 		df = pd.read_csv(self.filePath)
-
-		# delete un-needed column
 
 		# delete UTC timestamp column
 		if 'timestamp (-0400)' in df.columns:

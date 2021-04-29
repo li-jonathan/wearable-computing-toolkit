@@ -1,5 +1,3 @@
-#TODO: clean unused imports
-
 import numpy as np
 import pandas as pd
 import os
@@ -7,22 +5,26 @@ import csv
 import time
 import datetime
 
-# tkinter imports
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter import messagebox 
 
-# matplotlib imports
 from matplotlib.figure import Figure
-from matplotlib.pyplot import figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-
 from matplotlib.backend_bases import key_press_handler
 import matplotlib.pyplot as plt
 from matplotlib.widgets import SpanSelector
 import matplotlib.dates as mdate
+
+"""
+Label Datasets
+
+Separate window from main app that displays the merged csv file on a plot.
+User can then select range(s) from the plot to assign to a certain activity.
+When finished, program will create a new csv file with column for activities.
+"""
 
 class LabelDatasets:
 
@@ -37,17 +39,23 @@ class LabelDatasets:
 		self.range_edits_frame = Frame(self.activities_frame, bg="white")	# editing options for selections
 		self.plot_frame = Frame(self.main_frame, bg="white")				# holds the plot
 
+		# extract from parameters
 		self.merged_filename = filename
 		self.activities = [act.strip() for act in activities.split(",")]
 
+		# to be populated later
 		self.headers = []
 		self.values = []
-
 		self.activity_ranges = {}	# activities mapped with a list of their ranges
-
 		self.cur_start = None		# current start of range selected
 		self.cur_end = None			# current end of range selected
 		self.cur_ranges = []		# list of all current selected ranges
+	
+	def close_window(self):
+		"""Close window."""
+
+		self.root.quit()
+		self.root.destroy()
 
 	def activity_in_range(self, time):
 		"""Returns the activity that the given time falls into."""
@@ -73,56 +81,57 @@ class LabelDatasets:
 			acts.append(self.activity_in_range(t))
 		return acts
 
-	def close_window(self):
-		"""Close window."""
-
-		self.root.quit()
-		self.root.destroy()
-
 	def confirm_range(self):
-		"""Confirm the selected ranges to assign to the activity."""
+		"""Confirm the selected range(s) to assign to the activity."""
 
 		current_activity = self.activities_list.get()
+
+		# valid there is a activity selected
 		if len(current_activity) == 0:
 			messagebox.showinfo("Error", "No activity selected.")
 			return
 
+		# if activity has not been assigned a range yet
 		if current_activity not in self.activity_ranges:
 			self.activity_ranges[current_activity] = []
 
-		# add the ranges selected to activity 
+		# add the range(s) selected to activity 
 		for r in self.cur_ranges:
 			self.activity_ranges[current_activity].append(r)
 
+		# clear current range var and text box
 		self.cur_ranges = []
 		self.current_range_selections.delete('1.0', END)
+
+		# update the overall range list
 		self.update_range_list()
 
 	def create_gui(self):
 		"""Create widgets."""
 
+		# allow main frame to expand with window
 		self.main_frame.grid_columnconfigure(0, weight=1)
 		self.main_frame.grid_rowconfigure(2, weight=1)
 		self.main_frame.pack(side="top", padx=10, pady=10, expand=True, fill=tk.BOTH)
 
-		### ACTIVITY SELECTION ###
+		### ===== ACTIVITY SELECTION ===== ###
 
 		choose_activity_lbl = tk.Label(self.activities_frame, text="Choose activity", bg="white")
 		choose_activity_lbl.grid(row=0, column=0, padx=5, pady=5)
 
-		self.activities_list = ttk.Combobox(self.activities_frame, textvariable=tk.StringVar(), state="readonly", width=50)
+		# drop down for activity selection
+		self.activities_list = ttk.Combobox(self.activities_frame, textvariable=tk.StringVar(), state="readonly", width=30)
 		self.activities_list['values'] = self.activities
 		self.activities_list.grid(row=0, column=1, padx=5, pady=5)
 
 		self.activities_frame.grid(row=0, column=0)
 
-		### RANGE EDITING/CONFIRMING ###
+		### ===== RANGE EDITING/CONFIRMING ===== ###
 
 		# current selected range(s) for selected activity
 		self.current_range_selections = scrolledtext.ScrolledText(self.range_edits_frame, wrap = tk.WORD, bg="white", width=60, height=7)
 		self.current_range_selections.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
 
-		# index to delete label
 		idx_to_del = tk.Label(self.range_edits_frame, text="Delete index:", bg="white")
 		idx_to_del.grid(row=0, column=1, padx=5, pady=5)
 
@@ -142,12 +151,12 @@ class LabelDatasets:
 
 		self.range_edits_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
 
-		### SELECTED RANGES ###
+		### ===== ALL SELECTED RANGES ===== ###
 
 		self.all_ranges = scrolledtext.ScrolledText(self.activities_frame, wrap = tk.WORD, bg="white", width=40, height=15)
 		self.all_ranges.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
 		
-		### APPLY CHANGES ###
+		### ===== APPLY CHANGES ===== ###
 
 		done_btn = tk.Button(self.main_frame, text=("Apply changes to " + self.merged_filename))
 		done_btn["command"] = self.label_file
@@ -192,7 +201,6 @@ class LabelDatasets:
 		def onselect_func(xmin, xmax):
 			"""Gets the currently selected range on plot."""
 
-			# on select for date
 			xmin_date = mdate.num2date(xmin)
 			min_epoch = int(xmin_date.timestamp() * 1000)
 			xmax_date = mdate.num2date(xmax)
@@ -211,7 +219,6 @@ class LabelDatasets:
 
 		self.plot_frame.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky=tk.NSEW)
 
-
 	def init_app(self):
 		"""Initialize app settings and variables."""
 
@@ -221,6 +228,7 @@ class LabelDatasets:
 
 	def label_file(self):
 		"""Label csv file with associated activities."""
+		
 		# TODO: validate csv is not empty?
 
 		# read csv file and get first header
@@ -244,10 +252,12 @@ class LabelDatasets:
 		with open(self.merged_filename,'r') as csvfile:
 			plots = csv.reader(csvfile, delimiter=',')
 
+			# get headers and reserve empty list for values
 			for hdr in next(plots):
 				self.headers.append(hdr)
 				self.values.append([])
 
+			# read file row by row
 			for row in plots:
 				missing_vals = False
 				cur_vals = []
@@ -257,6 +267,7 @@ class LabelDatasets:
 					else:
 						missing_vals = True
 
+				# if there are missing values in a row, disregard the entire row
 				if not missing_vals:
 					for i in range(len(self.headers)):
 						self.values[i].append(cur_vals[i])
